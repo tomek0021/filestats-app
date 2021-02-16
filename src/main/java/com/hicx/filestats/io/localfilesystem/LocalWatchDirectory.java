@@ -2,21 +2,24 @@ package com.hicx.filestats.io.localfilesystem;
 
 import com.hicx.filestats.io.FileContent;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
 /**
  * Solution from:
  * https://docs.oracle.com/javase/tutorial/essential/io/notification.html
  */
-class LocalWatchDirectory {
+class LocalWatchDirectory implements Closeable {
 
     private final WatchService watcher;
     private final Map<WatchKey, Path> keys;
@@ -32,17 +35,16 @@ class LocalWatchDirectory {
         this.keys = new HashMap<>();
         this.sourceDirPath = sourceDir;
         this.targetDirPath = sourceDir.resolve("processed");
-        File targetDir = targetDirPath.toFile();
-        if (targetDir.exists()) {
-            targetDir.mkdirs();
-        }
+        Files.createDirectories(targetDirPath);
 
         WatchKey key = sourceDirPath.register(watcher, ENTRY_CREATE);
         keys.put(key, sourceDirPath);
     }
 
     void consumeAlreadyExistingFiles() throws IOException {
-        for (File file : sourceDirPath.toFile().listFiles()) {
+        File[] files = sourceDirPath.toFile().listFiles();
+        Arrays.sort(files);
+        for (File file : files) {
             notifyConsumerOnFile(file.toPath());
         }
     }
@@ -66,7 +68,7 @@ class LocalWatchDirectory {
         });
 
         Path targetFilePath = targetDirPath.resolve(sourceFilePath.getFileName().toString());
-        Files.move(sourceFilePath, targetFilePath);
+        Files.move(sourceFilePath, targetFilePath, REPLACE_EXISTING);
     }
 
     /**
@@ -115,5 +117,10 @@ class LocalWatchDirectory {
         Path sourceFilePath = dir.resolve(name);
 
         notifyConsumerOnFile(sourceFilePath);
+    }
+
+    @Override
+    public void close() throws IOException {
+        watcher.close();
     }
 }
