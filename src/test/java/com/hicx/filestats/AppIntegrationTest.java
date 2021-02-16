@@ -57,6 +57,16 @@ class AppIntegrationTest {
                 "Number of words: 3\nNumber of dots: 2\nMost used word: file2\n" +
                 "Number of words: 3\nNumber of dots: 3\nMost used word: file3\n"
         ));
+        assertThat(tempDir)
+                .isDirectoryNotContaining(path -> path.getFileName().toString().endsWith("file0.ttt"))
+                .isDirectoryNotContaining(path -> path.getFileName().toString().endsWith("file1.txt"))
+                .isDirectoryNotContaining(path -> path.getFileName().toString().endsWith("file2.txt"))
+                .isDirectoryNotContaining(path -> path.getFileName().toString().endsWith("file3.txt"));
+        assertThat(tempDir.resolve("processed"))
+                .isDirectoryContaining(path -> path.getFileName().toString().endsWith("file0.ttt"))
+                .isDirectoryContaining(path -> path.getFileName().toString().endsWith("file1.txt"))
+                .isDirectoryContaining(path -> path.getFileName().toString().endsWith("file2.txt"))
+                .isDirectoryContaining(path -> path.getFileName().toString().endsWith("file3.txt"));
 
         thread.interrupt();
     }

@@ -4,6 +4,9 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 
+/**
+ * Factory object for {@link StatisticProcessor}
+ */
 public class StatisticProcessorsFactory {
 
     public List<StatisticProcessor> createProcessors() {
